@@ -1,4 +1,7 @@
 {
   "buildCommand": "echo skip-build",
-  "outputDirectory": "example"
+  "outputDirectory": "example",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
