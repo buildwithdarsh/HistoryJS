@@ -1,0 +1,64 @@
+{
+  "name": "@buildwithdarsh/history.js",
+  "version": "1.0.0",
+  "description": "A modern, typed, framework-agnostic wrapper over the History API — typed entries, guards, query helpers, route matching, link interception, and a virtual stack. The 2026 successor to history.js.",
+  "main": "dist/history.umd.js",
+  "module": "dist/history.esm.js",
+  "types": "dist/history.d.ts",
+  "unpkg": "dist/history.umd.js",
+  "jsdelivr": "dist/history.umd.js",
+  "exports": {
+    ".": {
+      "types": "./dist/history.d.ts",
+      "import": "./dist/history.esm.js",
+      "require": "./dist/history.umd.js"
+    }
+  },
+  "files": [
+    "dist/history.umd.js",
+    "dist/history.umd.js.map",
+    "dist/history.esm.js",
+    "dist/history.esm.js.map",
+    "dist/history.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rollup -c && rm -rf example/dist && cp -r dist example/dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "rollup -c -w",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "keywords": [
+    "history",
+    "history.js",
+    "pushState",
+    "popstate",
+    "router",
+    "spa",
+    "navigation",
+    "url",
+    "query-string",
+    "route-matcher",
+    "typescript"
+  ],
+  "author": "Darsh Gupta",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "happy-dom": "^15.0.0",
+    "rollup": "^4.34.8",
+    "rollup-plugin-dts": "^6.1.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.0"
+  }
+}

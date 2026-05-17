@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>history.js — the modern History API wrapper</title>
+<meta name="description" content="A modern, typed, framework-agnostic wrapper over the browser History API. Typed entries, async guards, query helpers, route matching, link interception, virtual stack. Zero dependencies." />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-2: #1c1c1e;
+    --border: #2c2c2e;
+    --text: #f5f5f7;
+    --muted: #98989d;
+    --accent: #bf5af2;
+    --accent-2: #2997ff;
+    --warn: #ff9f0a;
+    --pink: #ff375f;
+    --green: #30d158;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body { min-height: 100vh; }
+  a { color: inherit; }
+
+  /* === HERO === */
+  .hero { position: relative; padding: 88px 24px 56px; text-align: center; overflow: hidden; }
+  .hero::before {
+    content: ''; position: absolute; inset: -20% -20% auto -20%; height: 900px; z-index: -1;
+    background:
+      radial-gradient(60% 60% at 50% 30%, rgba(191,90,242,0.18), transparent 60%),
+      radial-gradient(40% 50% at 20% 10%, rgba(41,151,255,0.15), transparent 60%),
+      radial-gradient(40% 50% at 80% 10%, rgba(48,209,88,0.10), transparent 60%);
+    filter: blur(40px);
+    animation: heroPulse 12s ease-in-out infinite;
+  }
+  .hero::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0.25;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 40%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 40%, transparent 80%);
+  }
+  @keyframes heroPulse {
+    0%, 100% { opacity: 1; transform: translateY(0); }
+    50% { opacity: 0.85; transform: translateY(-20px); }
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .badge { padding: 6px 14px; border-radius: 999px; background: rgba(28,28,30,0.7); backdrop-filter: blur(10px); border: 1px solid var(--border); font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.02em; }
+  .badge.accent { color: var(--accent); border-color: rgba(191,90,242,0.35); box-shadow: 0 0 24px rgba(191,90,242,0.1); }
+  .badge::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 6px; opacity: 0.6; }
+
+  h1 {
+    font-size: clamp(56px, 11vw, 128px); font-weight: 800; letter-spacing: -0.045em; line-height: 0.95;
+    margin-bottom: 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #f5f5f7 40%, #8e8e93 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  h1 .dot { color: var(--accent); -webkit-text-fill-color: var(--accent); }
+  .tagline { font-size: clamp(18px, 2.2vw, 22px); color: var(--muted); max-width: 660px; margin: 0 auto 8px; line-height: 1.5; }
+  .typewriter { font-size: clamp(18px, 2vw, 20px); max-width: 720px; margin: 0 auto 40px; height: 32px; font-family: 'SF Mono', Menlo, monospace; color: var(--accent); }
+  .typewriter .caret { display: inline-block; width: 2px; height: 1em; background: var(--accent); vertical-align: text-bottom; margin-left: 2px; animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 56px; }
+  .btn { padding: 14px 24px; border-radius: 12px; border: 1px solid var(--border); background: rgba(28,28,30,0.6); backdrop-filter: blur(10px); color: var(--text); font-size: 14px; font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+  .btn:hover { background: var(--surface-2); border-color: var(--muted); transform: translateY(-1px); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 8px 32px rgba(191,90,242,0.25); }
+  .btn.primary:hover { background: #a948d8; box-shadow: 0 12px 40px rgba(191,90,242,0.35); }
+  .btn.danger { color: var(--pink); border-color: rgba(255,55,95,0.35); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* === Live URL Bar === */
+  .urlbar { display: flex; align-items: center; gap: 12px; max-width: 900px; margin: 0 auto 32px; padding: 14px 18px; background: rgba(20,20,20,0.7); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+  .urlbar .dots { display: flex; gap: 6px; flex-shrink: 0; }
+  .urlbar .dots i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .urlbar .dots i:nth-child(1) { background: #ff5f57; }
+  .urlbar .dots i:nth-child(2) { background: #febc2e; }
+  .urlbar .dots i:nth-child(3) { background: #28c840; }
+  .urlbar .nav-btn { width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); cursor: pointer; color: var(--muted); transition: all 0.15s; }
+  .urlbar .nav-btn:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+  .urlbar .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .urlbar .url {
+    flex: 1; min-width: 0; padding: 8px 14px; border-radius: 8px;
+    background: #0a0a0a; border: 1px solid var(--border);
+    font-family: 'SF Mono', Menlo, monospace; font-size: 13px;
+    color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .urlbar .url .scheme { color: var(--muted); }
+  .urlbar .url .host { color: var(--muted); }
+  .urlbar .url .path { color: var(--accent-2); }
+  .urlbar .url .query { color: var(--warn); }
+  .urlbar .url .hash { color: var(--green); }
+
+  /* === Stats === */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 920px; margin: 0 auto 48px; }
+  @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: rgba(20,20,20,0.5); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: left; }
+  .stat .v { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; font-family: 'SF Mono', Menlo, monospace; transition: color 0.2s; }
+  .stat .l { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+  .stat .v.g { background: linear-gradient(135deg, var(--green) 0%, var(--accent-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat .v.o { background: linear-gradient(135deg, var(--warn) 0%, var(--pink) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat .v.p { background: linear-gradient(135deg, var(--accent) 0%, var(--pink) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat .v.b { background: linear-gradient(135deg, var(--accent-2) 0%, var(--accent) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat.flash { animation: flash 0.6s ease-out; }
+  @keyframes flash { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+  /* === Playground === */
+  .playground { padding: 56px 24px; }
+  .play-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .play-grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; }
+  .panel h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .panel h3 .pill { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+  .panel .desc { color: var(--muted); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+  .panel + .panel { margin-top: 16px; }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .row:last-child { margin-bottom: 0; }
+  .input {
+    flex: 1; min-width: 120px; padding: 9px 12px; border-radius: 8px;
+    background: #0a0a0a; border: 1px solid var(--border); color: var(--text);
+    font-family: 'SF Mono', Menlo, monospace; font-size: 12px;
+  }
+  .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(191,90,242,0.15); }
+  .input.sm { max-width: 140px; flex: 0 0 auto; }
+  .btn.sm { padding: 9px 14px; font-size: 12px; }
+
+  /* === Event log === */
+  .log { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; background: #0a0a0a; border: 1px solid var(--border); border-radius: 12px; height: 320px; overflow-y: auto; padding: 12px; }
+  .log:empty::before { content: 'No events yet. Try the controls →'; color: var(--muted); font-style: italic; }
+  .log .ev { padding: 6px 8px; border-radius: 6px; margin-bottom: 4px; animation: slideIn 0.2s ease-out; border-left: 2px solid var(--border); display: grid; grid-template-columns: 60px 1fr; gap: 8px; align-items: baseline; }
+  .log .ev.push { border-left-color: var(--accent-2); }
+  .log .ev.replace { border-left-color: var(--warn); }
+  .log .ev.pop { border-left-color: var(--green); }
+  .log .ev.cancel { border-left-color: var(--pink); }
+  .log .ev .t { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .log .ev .body { color: var(--text); overflow: hidden; }
+  .log .ev .body .arrow { color: var(--muted); margin: 0 4px; }
+  .log .ev .body .from { color: var(--muted); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* === Stack viz === */
+  .stack { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; padding: 4px; }
+  .stack-entry { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; font-family: 'SF Mono', Menlo, monospace; font-size: 12px; transition: all 0.2s; }
+  .stack-entry.current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 4px 24px rgba(191,90,242,0.18); background: rgba(191,90,242,0.06); }
+  .stack-entry .idx { color: var(--muted); font-size: 11px; }
+  .stack-entry.current .idx { color: var(--accent); font-weight: 700; }
+  .stack-entry .path { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stack-entry .ts { color: var(--muted); font-size: 10px; }
+
+  /* === Match playground === */
+  .match-result { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; padding: 12px; border-radius: 10px; background: #0a0a0a; border: 1px solid var(--border); min-height: 64px; white-space: pre-wrap; word-break: break-all; }
+  .match-result.hit { border-color: var(--green); color: var(--green); }
+  .match-result.miss { border-color: var(--pink); color: var(--pink); }
+
+  /* === Features === */
+  .features { padding: 96px 24px 48px; }
+  .section-head { text-align: center; margin-bottom: 56px; }
+  .section-head .eyebrow { display: inline-block; color: var(--accent); font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .section-head h2 { font-size: clamp(32px, 5vw, 48px); font-weight: 700; letter-spacing: -0.03em; margin-bottom: 12px; }
+  .section-head p { color: var(--muted); font-size: 17px; max-width: 560px; margin: 0 auto; line-height: 1.5; }
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .feat { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; position: relative; overflow: hidden; transition: all 0.2s; }
+  .feat:hover { border-color: var(--muted); transform: translateY(-2px); }
+  .feat .icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 20px; }
+  .feat h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .feat p { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+  .feat pre { background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: 'SF Mono', Menlo, monospace; font-size: 11px; color: var(--text); overflow-x: auto; line-height: 1.55; }
+  .feat pre .k { color: var(--accent); }
+  .feat pre .s { color: var(--green); }
+  .feat pre .c { color: var(--muted); }
+  .feat pre .n { color: var(--accent-2); }
+
+  /* === Install === */
+  .install { padding: 64px 24px; }
+  .install-card { max-width: 720px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; }
+  .install-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .install-tab { padding: 8px 16px; border-radius: 8px; background: transparent; border: 1px solid transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .install-tab.active { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+  .install pre { background: #000; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; overflow-x: auto; }
+  .install pre .c { color: var(--muted); }
+  .install pre .k { color: var(--accent); }
+
+  /* === Footer === */
+  footer { padding: 64px 24px 48px; text-align: center; border-top: 1px solid var(--border); margin-top: 64px; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--text); text-decoration: none; border-bottom: 1px dashed var(--muted); }
+  footer a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+<section class="hero">
+  <div class="wrap">
+    <div class="badges">
+      <span class="badge accent">v1.0.0 · stable</span>
+      <span class="badge">0 dependencies</span>
+      <span class="badge">~3KB gzipped</span>
+      <span class="badge">TypeScript-first</span>
+      <span class="badge">MIT</span>
+    </div>
+    <h1>history<span class="dot">.</span>js</h1>
+    <p class="tagline">The modern, typed, framework-agnostic wrapper over the browser History API.</p>
+    <p class="typewriter"><span id="typed"></span><span class="caret"></span></p>
+    <div class="cta">
+      <a href="#playground" class="btn primary">Try it live →</a>
+      <a href="#install" class="btn">npm install</a>
+      <a href="https://github.com/browserstate/history.js" target="_blank" rel="noopener" class="btn">Original (2010)</a>
+    </div>
+
+    <!-- Live URL bar -->
+    <div class="urlbar">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <button class="nav-btn" id="btn-back" title="Back (Alt+←)">◀</button>
+      <button class="nav-btn" id="btn-forward" title="Forward (Alt+→)">▶</button>
+      <button class="nav-btn" id="btn-reload" title="Reload">⟳</button>
+      <div class="url" id="url-display"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat" id="stat-pushes"><div class="v g" data-v>0</div><div class="l">Pushes</div></div>
+      <div class="stat" id="stat-replaces"><div class="v o" data-v>0</div><div class="l">Replaces</div></div>
+      <div class="stat" id="stat-pops"><div class="v b" data-v>0</div><div class="l">Pops</div></div>
+      <div class="stat" id="stat-stack"><div class="v p" data-v>1</div><div class="l">Stack size</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     PLAYGROUND
+========================================================= -->
+<section class="playground" id="playground">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Live playground</span>
+      <h2>Every action mutates the URL bar above</h2>
+      <p>This whole page runs on the bundled library. Open DevTools and watch <code>window.history</code> change in real time.</p>
+    </div>
+
+    <div class="play-grid">
+      <!-- Left column -->
+      <div>
+        <div class="panel">
+          <h3>Navigate <span class="pill">push / replace</span></h3>
+          <p class="desc">Push or replace an entry. Replace keeps the same index — push creates a new one.</p>
+          <div class="row">
+            <input class="input" id="nav-input" value="/products/42" placeholder="/path?query#hash" />
+            <button class="btn sm primary" id="nav-push">Push</button>
+            <button class="btn sm" id="nav-replace">Replace</button>
+          </div>
+          <div class="row">
+            <button class="btn sm" data-quick="/">/</button>
+            <button class="btn sm" data-quick="/about">/about</button>
+            <button class="btn sm" data-quick="/users/alex">/users/alex</button>
+            <button class="btn sm" data-quick="/search?q=hello">/search?q=hello</button>
+            <button class="btn sm" data-quick="/doc#section-2">/doc#section-2</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Query helpers <span class="pill">setQuery</span></h3>
+          <p class="desc">Patch query params on the current URL. <code>null</code> removes a key.</p>
+          <div class="row">
+            <input class="input sm" id="q-key" value="page" placeholder="key" />
+            <input class="input sm" id="q-value" value="2" placeholder="value (empty = remove)" />
+            <button class="btn sm primary" id="q-set">setQuery</button>
+            <button class="btn sm" id="q-clear">Clear all</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Route matcher <span class="pill">matches</span></h3>
+          <p class="desc">Test a pattern against the current pathname. Supports <code>:param</code>, <code>:param?</code>, <code>:param*</code>.</p>
+          <div class="row">
+            <input class="input" id="match-pattern" value="/users/:name" placeholder="/users/:id" />
+            <button class="btn sm primary" id="match-run">Match</button>
+          </div>
+          <div class="match-result" id="match-out">Result will appear here.</div>
+        </div>
+
+        <div class="panel">
+          <h3>Navigation guard <span class="pill">addGuard</span></h3>
+          <p class="desc">When enabled, every navigation triggers a <code>confirm()</code> prompt. Cancel it to block the navigation.</p>
+          <div class="row">
+            <label style="color:var(--muted); font-size:13px; display:inline-flex; gap:8px; align-items:center; cursor:pointer;">
+              <input type="checkbox" id="guard-toggle" /> Block navigation with confirm()
+            </label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Link interception <span class="pill">interceptLinks</span></h3>
+          <p class="desc">Same-origin <code>&lt;a&gt;</code> clicks become <code>push</code> calls automatically. Try them:</p>
+          <div class="row">
+            <a href="/intercepted/1" class="btn sm">→ /intercepted/1</a>
+            <a href="/intercepted/2" class="btn sm">→ /intercepted/2</a>
+            <a href="/intercepted/3?foo=bar" class="btn sm">→ /intercepted/3?foo=bar</a>
+            <a href="https://example.com" target="_blank" rel="noopener" class="btn sm">→ external (passes through)</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <div class="panel">
+          <h3>Event log <span class="pill">subscribe</span></h3>
+          <p class="desc">Every navigation streams a typed <code>NavigationEvent</code> here.</p>
+          <div class="log" id="log"></div>
+          <div class="row" style="margin-top:12px;">
+            <button class="btn sm" id="log-clear">Clear log</button>
+            <button class="btn sm danger" id="reset-all">Reset history</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Virtual stack <span class="pill">entries</span></h3>
+          <p class="desc">In-memory snapshot of entries seen by the manager. Current entry is highlighted.</p>
+          <div class="stack" id="stack"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     FEATURES
+========================================================= -->
+<section class="features">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">What you get</span>
+      <h2>A pragmatic toolbox for routing</h2>
+      <p>Not a router — the primitives a router is built from. Use it directly, or wrap it in your own thin abstraction.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feat">
+        <div class="icon" style="background: rgba(191,90,242,0.15); color: var(--accent);">📦</div>
+        <h3>Typed entries</h3>
+        <p>Every navigation produces a <code>HistoryEntry&lt;TState&gt;</code> with a stable id, monotonic index, timestamp, and location snapshot.</p>
+<pre><span class="k">const</span> h = <span class="n">getHistory</span>&lt;{ view: <span class="s">'home'</span> }&gt;();
+h.entry.id;       <span class="c">// 'hjs_…'</span>
+h.entry.state;    <span class="c">// { view: 'home' } | null</span></pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(41,151,255,0.15); color: var(--accent-2);">🔔</div>
+        <h3>Subscription model</h3>
+        <p>Plain functions in, unsubscribe out. No event-name strings, no <code>statechange</code> magic.</p>
+<pre><span class="k">const</span> off = h.<span class="n">subscribe</span>((e) =&gt; {
+  console.log(e.type, e.to.location.pathname);
+});
+off();</pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(48,209,88,0.15); color: var(--green);">🛡️</div>
+        <h3>Async guards</h3>
+        <p>Return <code>false</code> to cancel. Pop navigations attempt to restore via <code>history.go(delta)</code>.</p>
+<pre>h.<span class="n">addGuard</span>(<span class="k">async</span> (e) =&gt; {
+  <span class="k">if</span> (e.to.location.pathname.startsWith(<span class="s">'/admin'</span>))
+    <span class="k">return</span> <span class="k">await</span> checkAuth();
+});</pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(255,159,10,0.15); color: var(--warn);">🔗</div>
+        <h3>Query helpers</h3>
+        <p>Patch params without rebuilding the URL. Null removes a key. Arrays serialize as repeated params.</p>
+<pre>h.<span class="n">setQuery</span>({ page: <span class="n">2</span>, q: <span class="s">'hi'</span> });
+h.<span class="n">setQuery</span>({ page: <span class="k">null</span> }); <span class="c">// remove</span>
+h.<span class="n">getQuery</span>(<span class="s">'page'</span>);</pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(255,55,95,0.15); color: var(--pink);">🎯</div>
+        <h3>Route matcher</h3>
+        <p>Pattern matching for routing decisions. Supports named, optional, and splat params.</p>
+<pre>h.<span class="n">matches</span>&lt;{ id: <span class="k">string</span> }&gt;(<span class="s">'/users/:id'</span>);
+<span class="n">buildPath</span>(<span class="s">'/users/:id'</span>, { id: <span class="n">42</span> });
+<span class="c">// → '/users/42'</span></pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(191,90,242,0.15); color: var(--accent);">🪝</div>
+        <h3>Link interception</h3>
+        <p>One call hijacks every <code>&lt;a&gt;</code> click. Modifier-clicks, off-origin, target, and download links pass through.</p>
+<pre><span class="k">import</span> { <span class="n">interceptLinks</span> } <span class="k">from</span> <span class="s">'@buildwithdarsh/history.js'</span>;
+<span class="n">interceptLinks</span>(h);</pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(48,209,88,0.15); color: var(--green);">📜</div>
+        <h3>Virtual stack</h3>
+        <p>Tracks every entry the manager has visited so you can render breadcrumbs, history menus, or analytics.</p>
+<pre>h.entries.<span class="n">forEach</span>((entry) =&gt; {
+  console.log(entry.index, entry.location.href);
+});</pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(41,151,255,0.15); color: var(--accent-2);">🔄</div>
+        <h3>Scroll restoration</h3>
+        <p>Automatic on pop navigations — preserves scroll position per entry, just like the browser used to.</p>
+<pre><span class="k">const</span> h = <span class="n">getHistory</span>({
+  restoreScrollOnPop: <span class="k">true</span>,
+});</pre>
+      </div>
+
+      <div class="feat">
+        <div class="icon" style="background: rgba(255,159,10,0.15); color: var(--warn);">⌛</div>
+        <h3>Promise-friendly</h3>
+        <p>Navigation is async because guards are async. Resolves with <code>true</code> or <code>false</code> so you know what happened.</p>
+<pre><span class="k">const</span> ok = <span class="k">await</span> h.<span class="n">push</span>(<span class="s">'/profile'</span>);
+<span class="k">if</span> (!ok) showBlockedToast();
+<span class="k">await</span> h.<span class="n">waitFor</span>(); <span class="c">// next nav</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     INSTALL
+========================================================= -->
+<section class="install" id="install">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Get started</span>
+      <h2>Install in one line</h2>
+      <p>Works in any bundler, plain <code>&lt;script&gt;</code>, or as an ES module.</p>
+    </div>
+    <div class="install-card">
+      <div class="install-tabs">
+        <button class="install-tab active" data-tab="npm">npm</button>
+        <button class="install-tab" data-tab="pnpm">pnpm</button>
+        <button class="install-tab" data-tab="yarn">yarn</button>
+        <button class="install-tab" data-tab="cdn">CDN</button>
+      </div>
+      <pre id="install-cmd"><span class="c">$</span> npm install <span class="k">@buildwithdarsh/history.js</span></pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>history.js · MIT · made for the 2026 web · the spiritual successor to <a href="https://github.com/browserstate/history.js" target="_blank" rel="noopener">browserstate/history.js (2010)</a></p>
+</footer>
+
+<!-- =========================================================
+     SCRIPTS
+========================================================= -->
+<script type="module">
+  import { HistoryManager, interceptLinks, matchPattern, buildPath } from './dist/history.esm.js';
+
+  // Singleton instance for the demo.
+  const h = new HistoryManager();
+  window.h = h; // makes it pokeable from devtools
+
+  // ---------- URL bar ----------
+  const urlEl = document.getElementById('url-display');
+  function renderUrl() {
+    const loc = h.entry.location;
+    urlEl.innerHTML =
+      `<span class="scheme">${escapeHtml(new URL(loc.href).protocol)}//</span>` +
+      `<span class="host">${escapeHtml(new URL(loc.href).host)}</span>` +
+      `<span class="path">${escapeHtml(loc.pathname)}</span>` +
+      (loc.search ? `<span class="query">${escapeHtml(loc.search)}</span>` : '') +
+      (loc.hash ? `<span class="hash">${escapeHtml(loc.hash)}</span>` : '');
+  }
+  function escapeHtml(s) { return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // ---------- Stats ----------
+  const statEls = {
+    pushes: document.querySelector('#stat-pushes [data-v]'),
+    replaces: document.querySelector('#stat-replaces [data-v]'),
+    pops: document.querySelector('#stat-pops [data-v]'),
+    stack: document.querySelector('#stat-stack [data-v]'),
+  };
+  function flash(el) {
+    const card = el.closest('.stat');
+    if (!card) return;
+    card.classList.remove('flash');
+    void card.offsetWidth;
+    card.classList.add('flash');
+  }
+  function renderStats(changed) {
+    statEls.pushes.textContent = h.metrics.pushes;
+    statEls.replaces.textContent = h.metrics.replaces;
+    statEls.pops.textContent = h.metrics.pops;
+    statEls.stack.textContent = h.entries.length;
+    if (changed) flash(statEls[changed]);
+  }
+
+  // ---------- Event log ----------
+  const logEl = document.getElementById('log');
+  function logEvent(e) {
+    const div = document.createElement('div');
+    div.className = `ev ${e.type}`;
+    const time = new Date().toLocaleTimeString([], { hour12: false });
+    const from = e.from ? e.from.location.pathname + e.from.location.search : '∅';
+    const to = e.to.location.pathname + e.to.location.search;
+    div.innerHTML =
+      `<span class="t">${time}</span>` +
+      `<span class="body"><strong>${e.type}</strong> <span class="from">${escapeHtml(from)}</span><span class="arrow">→</span>${escapeHtml(to)}` +
+      (e.isPopState ? ` <span style="color:var(--muted);">(popstate · ${e.direction})</span>` : '') +
+      `</span>`;
+    logEl.prepend(div);
+    while (logEl.children.length > 50) logEl.removeChild(logEl.lastChild);
+  }
+
+  // ---------- Stack ----------
+  const stackEl = document.getElementById('stack');
+  function renderStack() {
+    stackEl.innerHTML = '';
+    for (const entry of [...h.entries].reverse()) {
+      const isCurrent = entry.id === h.entry.id;
+      const row = document.createElement('div');
+      row.className = 'stack-entry' + (isCurrent ? ' current' : '');
+      const ts = new Date(entry.timestamp).toLocaleTimeString([], { hour12: false });
+      row.innerHTML =
+        `<div class="idx">#${entry.index}</div>` +
+        `<div class="path">${escapeHtml(entry.location.pathname + entry.location.search + entry.location.hash)}</div>` +
+        `<div class="ts">${ts}</div>`;
+      stackEl.appendChild(row);
+    }
+  }
+
+  // ---------- Bind everything to events ----------
+  h.subscribe((e) => {
+    renderUrl();
+    renderStats(e.type === 'push' ? 'pushes' : e.type === 'replace' ? 'replaces' : 'pops');
+    renderStack();
+    logEvent(e);
+  });
+  renderUrl();
+  renderStats();
+  renderStack();
+
+  // ---------- Controls: nav ----------
+  document.getElementById('nav-push').onclick = () => {
+    const v = document.getElementById('nav-input').value.trim();
+    if (v) h.push(v);
+  };
+  document.getElementById('nav-replace').onclick = () => {
+    const v = document.getElementById('nav-input').value.trim();
+    if (v) h.replace(v);
+  };
+  document.querySelectorAll('[data-quick]').forEach(b => {
+    b.onclick = () => h.push(b.dataset.quick);
+  });
+
+  // ---------- Top-bar nav buttons ----------
+  document.getElementById('btn-back').onclick = () => h.back();
+  document.getElementById('btn-forward').onclick = () => h.forward();
+  document.getElementById('btn-reload').onclick = () => {
+    // Don't actually reload — just flash the stat
+    renderStats('pushes');
+  };
+
+  // ---------- Controls: query ----------
+  document.getElementById('q-set').onclick = () => {
+    const key = document.getElementById('q-key').value.trim();
+    const val = document.getElementById('q-value').value;
+    if (!key) return;
+    h.setQuery({ [key]: val === '' ? null : val });
+  };
+  document.getElementById('q-clear').onclick = () => {
+    const current = new URLSearchParams(h.entry.location.search);
+    const patch = {};
+    for (const k of current.keys()) patch[k] = null;
+    h.setQuery(patch);
+  };
+
+  // ---------- Controls: matcher ----------
+  const matchOut = document.getElementById('match-out');
+  function runMatch() {
+    const pattern = document.getElementById('match-pattern').value.trim();
+    if (!pattern) return;
+    try {
+      const result = matchPattern(pattern, h.entry.location.pathname);
+      if (result) {
+        matchOut.className = 'match-result hit';
+        matchOut.textContent =
+          `✓ matched\n  pattern: ${result.pattern}\n  path:    ${result.path}\n  params:  ${JSON.stringify(result.params, null, 2)}`;
+      } else {
+        matchOut.className = 'match-result miss';
+        matchOut.textContent =
+          `✗ no match\n  pattern: ${pattern}\n  path:    ${h.entry.location.pathname}`;
+      }
+    } catch (err) {
+      matchOut.className = 'match-result miss';
+      matchOut.textContent = `error: ${err.message}`;
+    }
+  }
+  document.getElementById('match-run').onclick = runMatch;
+  document.getElementById('match-pattern').oninput = runMatch;
+  h.subscribe(runMatch);
+  runMatch();
+
+  // ---------- Controls: guard ----------
+  let guardOff = null;
+  document.getElementById('guard-toggle').onchange = (e) => {
+    if (e.target.checked) {
+      guardOff = h.addGuard((ev) => window.confirm(`Allow navigation to ${ev.to.location.pathname}?`));
+    } else if (guardOff) {
+      guardOff();
+      guardOff = null;
+    }
+  };
+
+  // ---------- Link interception ----------
+  // Only attach to anchors inside .panel rows so we don't hijack header CTAs.
+  interceptLinks(h, { selector: '.panel a[href]' });
+
+  // ---------- Log/reset ----------
+  document.getElementById('log-clear').onclick = () => { logEl.innerHTML = ''; };
+  document.getElementById('reset-all').onclick = () => {
+    h.replace('/');
+    logEl.innerHTML = '';
+    h.metrics.pushes = h.metrics.replaces = h.metrics.pops = h.metrics.cancelled = 0;
+    renderStats();
+  };
+
+  // ---------- Typewriter ----------
+  const phrases = [
+    'await h.push("/profile/42")',
+    'h.matches("/users/:id")',
+    'h.setQuery({ page: 2 })',
+    'h.subscribe((e) => …)',
+    'h.addGuard(async (e) => …)',
+    'interceptLinks(h)',
+  ];
+  const typed = document.getElementById('typed');
+  let pi = 0, ci = 0, deleting = false;
+  function tick() {
+    const phrase = phrases[pi];
+    if (!deleting) {
+      ci++;
+      typed.textContent = phrase.slice(0, ci);
+      if (ci === phrase.length) { deleting = true; setTimeout(tick, 1400); return; }
+    } else {
+      ci--;
+      typed.textContent = phrase.slice(0, ci);
+      if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; }
+    }
+    setTimeout(tick, deleting ? 24 : 60);
+  }
+  tick();
+
+  // ---------- Install tabs ----------
+  const installCmds = {
+    npm: '<span class="c">$</span> npm install <span class="k">@buildwithdarsh/history.js</span>',
+    pnpm: '<span class="c">$</span> pnpm add <span class="k">@buildwithdarsh/history.js</span>',
+    yarn: '<span class="c">$</span> yarn add <span class="k">@buildwithdarsh/history.js</span>',
+    cdn: '<span class="c">&lt;script src="https://unpkg.com/<span class="k">@buildwithdarsh/history.js</span>"&gt;&lt;/script&gt;</span>',
+  };
+  const cmdEl = document.getElementById('install-cmd');
+  document.querySelectorAll('.install-tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.install-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      cmdEl.innerHTML = installCmds[t.dataset.tab];
+    };
+  });
+</script>
+
+</body>
+</html>
