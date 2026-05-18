@@ -308,7 +308,7 @@ export class HistoryManager<TState = unknown> {
       } catch (err) {
         // Listener errors should never break navigation.
         // eslint-disable-next-line no-console
-        console.error('[history.js] listener threw:', err);
+        console.error('[HistoryJS] listener threw:', err);
       }
     }
   }

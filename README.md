@@ -1,8 +1,8 @@
-# history.js
+# HistoryJS
 
 A modern, typed, framework-agnostic wrapper over the browser History API. The 2026 successor to [browserstate/history.js](https://github.com/browserstate/history.js/).
 
-[![npm](https://img.shields.io/badge/npm-v1.0.0-bf5af2)](https://www.npmjs.com/package/@buildwithdarsh/history.js)
+[![npm](https://img.shields.io/badge/npm-v1.0.0-bf5af2)](https://www.npmjs.com/package/@buildwithdarsh/historyjs)
 [![bundle](https://img.shields.io/badge/gzipped-~3KB-2997ff)](#)
 [![license](https://img.shields.io/badge/license-MIT-30d158)](LICENSE)
 [![types](https://img.shields.io/badge/TypeScript-first-2997ff)](#)
@@ -12,23 +12,23 @@ The original `history.js` shipped in 2010 to paper over the HTML4/HTML5 split. E
 ## Install
 
 ```bash
-npm install @buildwithdarsh/history.js
+npm install @buildwithdarsh/historyjs
 # or
-pnpm add @buildwithdarsh/history.js
+pnpm add @buildwithdarsh/historyjs
 # or
-yarn add @buildwithdarsh/history.js
+yarn add @buildwithdarsh/historyjs
 ```
 
 Or via CDN:
 
 ```html
-<script src="https://unpkg.com/@buildwithdarsh/history.js"></script>
+<script src="https://unpkg.com/@buildwithdarsh/historyjs"></script>
 ```
 
 ## Quick start
 
 ```ts
-import { getHistory } from '@buildwithdarsh/history.js';
+import { getHistory } from '@buildwithdarsh/historyjs';
 
 type AppState = { view: 'home' | 'profile'; userId?: string };
 
@@ -44,7 +44,7 @@ history.back();
 
 ## Why a rewrite?
 
-| Original `history.js` (2010)              | `@buildwithdarsh/history.js` (2026) |
+| Original `history.js` (2010)              | `@buildwithdarsh/historyjs` (2026) |
 | ----------------------------------------- | ----------------------------------- |
 | HTML4 hashchange fallback                 | Native History API only             |
 | jQuery / MooTools / Prototype adapters    | Zero dependencies                   |
@@ -128,13 +128,13 @@ history.searchParams;                        // URLSearchParams (read-only)
 Or use the standalone helpers:
 
 ```ts
-import { parseQuery, stringifyQuery, mergeQuery } from '@buildwithdarsh/history.js';
+import { parseQuery, stringifyQuery, mergeQuery } from '@buildwithdarsh/historyjs';
 ```
 
 ### Route matching
 
 ```ts
-import { matchPattern, buildPath } from '@buildwithdarsh/history.js';
+import { matchPattern, buildPath } from '@buildwithdarsh/historyjs';
 
 history.matches<{ id: string }>('/users/:id');
 // → { pattern: '/users/:id', path: '/users/42', params: { id: '42' } }
@@ -153,7 +153,7 @@ Supported syntax:
 One call hijacks every same-origin `<a>` click. Modifier-clicks, off-origin links, download links, and links with `target` pass through unchanged.
 
 ```ts
-import { interceptLinks } from '@buildwithdarsh/history.js';
+import { interceptLinks } from '@buildwithdarsh/historyjs';
 
 const off = interceptLinks(history);
 // Optional config:
@@ -195,7 +195,7 @@ The library sets `history.scrollRestoration = 'manual'` by default — pass `scr
 `getHistory()` is a lazy singleton — convenient for app code. For tests or iframes, instantiate directly:
 
 ```ts
-import { HistoryManager } from '@buildwithdarsh/history.js';
+import { HistoryManager } from '@buildwithdarsh/historyjs';
 const history = new HistoryManager({ window: iframe.contentWindow! });
 ```
 
@@ -203,7 +203,7 @@ const history = new HistoryManager({ window: iframe.contentWindow! });
 
 ```tsx
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { getHistory } from '@buildwithdarsh/history.js';
+import { getHistory } from '@buildwithdarsh/historyjs';
 
 const history = getHistory<{ page: string }>();
 

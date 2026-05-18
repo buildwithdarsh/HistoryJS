@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>history.js — the modern History API wrapper</title>
+<title>HistoryJS — the modern History API wrapper</title>
 <meta name="description" content="A modern, typed, framework-agnostic wrapper over the browser History API. Typed entries, async guards, query helpers, route matching, link interception, virtual stack. Zero dependencies." />
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <style>
@@ -209,13 +209,13 @@
       <span class="badge">TypeScript-first</span>
       <span class="badge">MIT</span>
     </div>
-    <h1>history<span class="dot">.</span>js</h1>
+    <h1>History<span class="dot">JS</span></h1>
     <p class="tagline">The modern, typed, framework-agnostic wrapper over the browser History API.</p>
     <p class="typewriter"><span id="typed"></span><span class="caret"></span></p>
     <div class="cta">
       <a href="#playground" class="btn primary">Try it live →</a>
       <a href="#install" class="btn">npm install</a>
-      <a href="https://github.com/buildwithdarsh/history.js" target="_blank" rel="noopener" class="btn" aria-label="View source on GitHub">
+      <a href="https://github.com/buildwithdarsh/HistoryJS" target="_blank" rel="noopener" class="btn" aria-label="View source on GitHub">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align:-2px;margin-right:4px;"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-.99-.01-1.95-3.2.69-3.87-1.54-3.87-1.54-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.69 1.24 3.34.95.1-.74.4-1.24.73-1.53-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.84 1.18 3.1 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.67.8.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
         GitHub
       </a>
@@ -400,7 +400,7 @@ h.<span class="n">getQuery</span>(<span class="s">'page'</span>);</pre>
         <div class="icon" style="background: rgba(191,90,242,0.15); color: var(--accent);">🪝</div>
         <h3>Link interception</h3>
         <p>One call hijacks every <code>&lt;a&gt;</code> click. Modifier-clicks, off-origin, target, and download links pass through.</p>
-<pre><span class="k">import</span> { <span class="n">interceptLinks</span> } <span class="k">from</span> <span class="s">'@buildwithdarsh/history.js'</span>;
+<pre><span class="k">import</span> { <span class="n">interceptLinks</span> } <span class="k">from</span> <span class="s">'@buildwithdarsh/historyjs'</span>;
 <span class="n">interceptLinks</span>(h);</pre>
       </div>
 
@@ -451,13 +451,13 @@ h.<span class="n">getQuery</span>(<span class="s">'page'</span>);</pre>
         <button class="install-tab" data-tab="yarn">yarn</button>
         <button class="install-tab" data-tab="cdn">CDN</button>
       </div>
-      <pre id="install-cmd"><span class="c">$</span> npm install <span class="k">@buildwithdarsh/history.js</span></pre>
+      <pre id="install-cmd"><span class="c">$</span> npm install <span class="k">@buildwithdarsh/historyjs</span></pre>
     </div>
   </div>
 </section>
 
 <footer>
-  <p>history.js · MIT · made for the 2026 web · the spiritual successor to <a href="https://github.com/browserstate/history.js" target="_blank" rel="noopener">browserstate/history.js (2010)</a></p>
+  <p>HistoryJS · MIT · made for the 2026 web · the spiritual successor to <a href="https://github.com/browserstate/history.js" target="_blank" rel="noopener">browserstate/history.js (2010)</a></p>
 </footer>
 
 <!-- =========================================================
@@ -663,10 +663,10 @@ h.<span class="n">getQuery</span>(<span class="s">'page'</span>);</pre>
 
   // ---------- Install tabs ----------
   const installCmds = {
-    npm: '<span class="c">$</span> npm install <span class="k">@buildwithdarsh/history.js</span>',
-    pnpm: '<span class="c">$</span> pnpm add <span class="k">@buildwithdarsh/history.js</span>',
-    yarn: '<span class="c">$</span> yarn add <span class="k">@buildwithdarsh/history.js</span>',
-    cdn: '<span class="c">&lt;script src="https://unpkg.com/<span class="k">@buildwithdarsh/history.js</span>"&gt;&lt;/script&gt;</span>',
+    npm: '<span class="c">$</span> npm install <span class="k">@buildwithdarsh/historyjs</span>',
+    pnpm: '<span class="c">$</span> pnpm add <span class="k">@buildwithdarsh/historyjs</span>',
+    yarn: '<span class="c">$</span> yarn add <span class="k">@buildwithdarsh/historyjs</span>',
+    cdn: '<span class="c">&lt;script src="https://unpkg.com/<span class="k">@buildwithdarsh/historyjs</span>"&gt;&lt;/script&gt;</span>',
   };
   const cmdEl = document.getElementById('install-cmd');
   document.querySelectorAll('.install-tab').forEach(t => {

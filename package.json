@@ -1,5 +1,5 @@
 {
-  "name": "@buildwithdarsh/history.js",
+  "name": "@buildwithdarsh/historyjs",
   "version": "1.0.0",
   "description": "A modern, typed, framework-agnostic wrapper over the History API — typed entries, guards, query helpers, route matching, link interception, and a virtual stack. The 2026 successor to history.js.",
   "main": "dist/history.umd.js",
@@ -36,7 +36,7 @@
   },
   "keywords": [
     "history",
-    "history.js",
+    "historyjs",
     "pushState",
     "popstate",
     "router",
